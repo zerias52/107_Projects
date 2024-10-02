@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify
 from config import db
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app) # warning, this disables CORS policy
 
 @app.get("/")
 def home():
@@ -25,15 +27,36 @@ def fix_id(obj):
     return obj
 
 @app.get("/api/products")
-def get_products():
-    return jsonify(products)
+def read_products():
+    cursor = db.catalog.find({})
+    catalog = []
+    for prod in cursor:
+        catalog.append(fix_id(prod))
+    return jsonify(catalog)
+
 
 @app.post("/api/products")
 def save_products():
     item = request.get_json()
-    db.products.insert_one(item)
-    products.append(item)
+    db.catalog.insert_one(item)
     return jsonify(fix_id(item)), 201
+
+
+@app.get("/api/coupons")
+def read_coupons():
+    cursor = db.coupons.find({})
+    coupons = []
+    for coupon in cursor:
+        coupons.append(fix_id(coupon))
+    return jsonify(coupons)
+
+
+@app.post("/api/coupons")
+def save_coupons():
+    item = request.get_json()
+    db.coupons.insert_one(item)
+    return jsonify(fix_id(item)), 201
+
 
 @app.put("/api/products/<int:index>")
 def update_products(index):
